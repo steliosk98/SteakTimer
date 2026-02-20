@@ -1,0 +1,34 @@
+.app-frame {
+  position: relative;
+  min-height: 100dvh;
+  padding: clamp(1rem, 2vw, 2rem);
+  overflow: hidden;
+}
+
+.app-frame::before,
+.app-frame::after {
+  content: '';
+  position: fixed;
+  pointer-events: none;
+  filter: blur(30px);
+  opacity: 0.45;
+  z-index: -1;
+}
+
+.app-frame::before {
+  width: min(44vw, 420px);
+  aspect-ratio: 1;
+  top: -10%;
+  left: -8%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(239, 139, 81, 0.36), rgba(112, 54, 28, 0.2));
+}
+
+.app-frame::after {
+  width: min(48vw, 520px);
+  aspect-ratio: 1;
+  right: -12%;
+  bottom: -14%;
+  border-radius: 44% 56% 63% 37% / 42% 44% 56% 58%;
+  background: radial-gradient(circle at 60% 40%, rgba(144, 172, 124, 0.28), rgba(49, 64, 42, 0.2));
+}
