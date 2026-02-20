@@ -10,9 +10,16 @@ import {
 } from '../utils/cookingLogic';
 
 const MotionMain = motion.main;
+const RANGE_CONFIG = {
+  inches: { min: 1, max: 5, step: 0.25, defaultValue: 1 },
+  cm: { min: 1, max: 13, step: 0.5, defaultValue: 2.5 },
+};
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const roundToStep = (value, step) => Math.round(value / step) * step;
 
 export default function SetupForm({ onStart }) {
-  const [thickness, setThickness] = useState(1);
+  const [thickness, setThickness] = useState(RANGE_CONFIG.inches.defaultValue);
   const [unit, setUnit] = useState('inches');
   const [boneIn, setBoneIn] = useState(false);
   const [method, setMethod] = useState('Pan');
@@ -26,10 +33,25 @@ export default function SetupForm({ onStart }) {
   const thicknessDisplay = Number(thickness.toFixed(2)).toString();
   const thicknessCm = unit === 'cm' ? thickness : thickness * 2.54;
   const thicknessInches = unit === 'inches' ? thickness : thickness / 2.54;
+  const activeRange = RANGE_CONFIG[unit];
   const equivalentText =
     unit === 'cm'
-      ? `Equivalent: ${thicknessInches.toFixed(2)} inches (0.25 step)`
-      : `Equivalent: ${thicknessCm.toFixed(1)} cm (0.25 step)`;
+      ? `Equivalent: ${thicknessInches.toFixed(2)} inches (${RANGE_CONFIG.inches.step} step)`
+      : `Equivalent: ${thicknessCm.toFixed(1)} cm (${RANGE_CONFIG.cm.step} step)`;
+
+  const handleUnitChange = (nextUnit) => {
+    if (nextUnit === unit) {
+      return;
+    }
+
+    const convertedValue = nextUnit === 'cm' ? thickness * 2.54 : thickness / 2.54;
+    const targetRange = RANGE_CONFIG[nextUnit];
+    const snapped = roundToStep(convertedValue, targetRange.step);
+    const clamped = clamp(snapped, targetRange.min, targetRange.max);
+
+    setThickness(clamped);
+    setUnit(nextUnit);
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -63,14 +85,14 @@ export default function SetupForm({ onStart }) {
                 <button
                   type="button"
                   className={unit === 'cm' ? 'is-active' : ''}
-                  onClick={() => setUnit('cm')}
+                  onClick={() => handleUnitChange('cm')}
                 >
                   cm
                 </button>
                 <button
                   type="button"
                   className={unit === 'inches' ? 'is-active' : ''}
-                  onClick={() => setUnit('inches')}
+                  onClick={() => handleUnitChange('inches')}
                 >
                   inches
                 </button>
@@ -80,13 +102,13 @@ export default function SetupForm({ onStart }) {
               id="thickness-range"
               className="thickness-slider"
               type="range"
-              min="1"
-              max="5"
-              step="0.25"
+              min={activeRange.min}
+              max={activeRange.max}
+              step={activeRange.step}
               value={thickness}
               onChange={(event) => setThickness(Number(event.target.value))}
-              aria-valuemin={1}
-              aria-valuemax={5}
+              aria-valuemin={activeRange.min}
+              aria-valuemax={activeRange.max}
               aria-valuenow={thickness}
             />
             <p className="hint">{equivalentText}</p>
